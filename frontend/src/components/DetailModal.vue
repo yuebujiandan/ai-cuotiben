@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { Question } from '@/types'
 import { questionApi } from '@/api/questions'
 import RichText from '@/components/RichText.vue'
@@ -13,6 +13,17 @@ const emit = defineEmits<{
 }>()
 
 const editing = ref(!!props.initialEdit)
+const bodyRef = ref<HTMLElement | null>(null)
+// 保存当前滚动位置：操作（重新 AI 分析/保存/收藏）触发 props.question 变化时，
+// Vue 会重建整棵 DOM，导致 Modal body 滚动位置归零。在 watch 中恢复。
+let savedScrollTop = 0
+watch(
+  () => props.question,
+  async () => {
+    await nextTick()
+    if (bodyRef.value) bodyRef.value.scrollTop = savedScrollTop
+  }
+)
 const saving = ref(false)
 const analyzing = ref(false)
 const errorMsg = ref('')
@@ -45,6 +56,8 @@ async function save() {
     errorMsg.value = '题目内容不能为空'
     return
   }
+  // 保存当前滚动位置（emit('updated') 会触发 props 变化 → DOM 重建 → 滚动归零）
+  if (bodyRef.value) savedScrollTop = bodyRef.value.scrollTop
   saving.value = true
   errorMsg.value = ''
   try {
@@ -66,6 +79,8 @@ async function save() {
 }
 
 async function reAnalyze() {
+  // 保存当前滚动位置（emit('updated') 会触发 props 变化 → DOM 重建 → 滚动归零）
+  if (bodyRef.value) savedScrollTop = bodyRef.value.scrollTop
   analyzing.value = true
   errorMsg.value = ''
   try {
@@ -79,6 +94,7 @@ async function reAnalyze() {
 }
 
 async function toggleFavorite() {
+  if (bodyRef.value) savedScrollTop = bodyRef.value.scrollTop
   try {
     const updated = await questionApi.update(props.question.id, {
       is_favorite: !props.question.is_favorite
@@ -110,7 +126,7 @@ function cancelEdit() {
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto px-6 py-4">
+      <div ref="bodyRef" class="flex-1 overflow-y-auto px-6 py-4">
         <!-- ===== 编辑模式 ===== -->
         <div v-if="editing" class="flex flex-col gap-3.5">
           <div>

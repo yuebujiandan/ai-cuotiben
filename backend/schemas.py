@@ -25,6 +25,7 @@ class OcrPreviewOut(BaseModel):
     text: str
     source: str
     questions: list[str] = Field(default_factory=list, description="按「第N题」拆分的片段（如仅 1 题则等于 [text]）")
+    quality_warning: str | None = Field(default=None, description="OCR 识别质量警告（疑似识别失败时给前端提示）")
 
 
 class QuestionUpdate(BaseModel):

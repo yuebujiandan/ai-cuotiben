@@ -50,8 +50,9 @@ const statusPills = [
   { value: 'green', label: '已掌握' }
 ]
 
-async function load() {
-  loading.value = true
+async function load(showSkeleton = true) {
+  // showSkeleton=false：轮询静默刷新——不切骨架屏、不整体替换数组，避免列表滚动位置丢失
+  if (showSkeleton) loading.value = true
   try {
     const params: {
       category?: string
@@ -70,13 +71,31 @@ async function load() {
     } else if (cat !== 'all') {
       params.category = cat
     }
-    questions.value = await questionApi.list(params)
+    const list = await questionApi.list(params)
+    mergeQuestions(list)
   } catch (e) {
     questions.value = []
     alert((e as Error).message)
   } finally {
-    loading.value = false
+    if (showSkeleton) loading.value = false
   }
+}
+
+/**
+ * 增量合并列表：相同 id 的题目复用旧对象引用（Object.assign 原位更新字段），
+ * 避免 v-for 因整体替换数组而卸载/重建 DOM 导致滚动位置丢失。
+ */
+function mergeQuestions(list: Question[]) {
+  const byId = new Map(questions.value.map((q) => [q.id, q]))
+  const merged = list.map((nq) => {
+    const old = byId.get(nq.id)
+    if (old) {
+      Object.assign(old, nq) // 响应式更新字段，保持同一对象引用
+      return old
+    }
+    return nq
+  })
+  questions.value = merged
 }
 
 // 当前选中的错题本 ID（用于新建题目时归属）
@@ -115,7 +134,7 @@ watch(
 const notebooksCache = ref<{ id: number; name: string }[]>([])
 questionApi.notebooks().then((list) => (notebooksCache.value = list)).catch(() => {})
 
-watch([category, statusFilter], load)
+watch([category, statusFilter], () => load())
 watch(keyword, () => setTimeout(load, 300))
 
 function remove(id: number) {
@@ -146,7 +165,7 @@ function startPolling() {
   pollTimer = setInterval(() => {
     pollCount++
     if (questions.value.some((q) => q.ai_analysis?.includes('AI 解析中'))) {
-      load()
+      load(false) // 静默刷新：不切骨架屏、增量合并，保持滚动位置
     }
     if (pollCount >= POLL_MAX) stopPolling()
   }, 10000)
