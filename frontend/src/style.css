@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-paper-bg text-[#3A3A35] antialiased;
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  h1, h2, h3 {
+    @apply font-medium text-[#2B2B28];
+  }
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-btn bg-inkblue px-5 text-[#FFFDF8] transition-all hover:bg-inkblue-hover active:scale-[0.97];
+    height: 36px;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-btn border border-[#D8D2C2] bg-paper-card px-5 text-inkblue transition-all hover:border-inkblue hover:bg-infobg active:scale-[0.97];
+    height: 36px;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-btn border border-[#E3DCCF] bg-paper-card px-5 text-error transition-all hover:bg-error-bg active:scale-[0.97];
+    height: 36px;
+  }
+  .btn-sm {
+    @apply px-3 text-[13px] font-normal;
+    height: 28px;
+  }
+  .tag {
+    @apply inline-flex items-center rounded-tag px-[9px] py-0.5 text-xs leading-6;
+  }
+  .tag-subject {
+    @apply bg-infobg text-inkblue;
+  }
+  .tag-red {
+    @apply bg-error-bg text-error;
+  }
+  .tag-amber {
+    @apply bg-warn-bg text-warn;
+  }
+  .tag-green {
+    @apply bg-success-bg text-success;
+  }
+  .input-base {
+    @apply rounded-btn border border-[#D8D2C2] bg-paper-card px-3.5 transition-all focus:border-inkblue focus:outline-none;
+    height: 36px;
+  }
+  .input-base:focus {
+    box-shadow: 0 0 0 2px rgba(43, 58, 103, 0.12);
+  }
+  .card-base {
+    @apply rounded-card border border-[#E3DCCF] bg-paper-card;
+  }
+}
